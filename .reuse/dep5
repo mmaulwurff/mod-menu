@@ -1,7 +1,7 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: Mod Menu
 Upstream-Contact: Alexander Kromm <mmaulwurff@gmail.com>
-Source: 
+Source: https://github.com/mmaulwurff/mod-menu
 
 # Sample paragraph, commented out:
 #
