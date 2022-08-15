@@ -5,9 +5,13 @@ SPDX-License-Identifier: CC0-1.0
 
 # Mod Menu
 
+![screenshot](screenshots/screenshot.png)
+
 This GZDoom add-on puts every mod options menu into the special Mod Menu instead
 of cluttering Options Menu.
 
-<img src="https://imgur.com/JC1Vspn.png"/>
+## Features
 
-<img src="https://imgur.com/CG1Hqun.png"/>
+- Moves all extra submenus from Options Menu to Mod Menu.
+- Adds Mod Menu to simplified Options Menu.
+- Has a chance to put Zandronum-style keybind-only-accessible menus to Mod Menu.
