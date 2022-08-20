@@ -12,9 +12,23 @@ class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
 
     addMenusFromKeys();
     removeDuplicates();
+
+    removeSelfIfEmpty("OptionsMenu");
+    removeSelfIfEmpty("OptionsMenuSimple");
   }
 
   // private: //////////////////////////////////////////////////////////////////////////////////////
+
+  private void removeSelfIfEmpty(string menuName)
+  {
+    let modMenuDescriptor = getDescriptor("mm_Options");
+    if (modMenuDescriptor.mItems.size() == 0)
+    {
+      let descriptor = getDescriptor(menuName);
+      descriptor.mItems.pop();
+      destroy();
+    }
+  }
 
   private void processMenu(string menuName)
   {
