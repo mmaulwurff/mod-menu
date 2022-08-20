@@ -20,3 +20,5 @@ of cluttering Options Menu.
 
 - mod menu detection expects that the first two MENUDEF lumps in the engine
   package are lumps for the full and the simple option menus.
+- Zandronum-style menus are detected by scanning Controls menu for anything
+  with a command containinng "open" and "menu".
