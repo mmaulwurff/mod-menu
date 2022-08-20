@@ -3,3 +3,4 @@
 
 AddKeySection "$MM_KEYS" mm_Keys
 AddMenuKey "$MM_OPEN" "openmenu mm_Options"
+DefaultBind M "openmenu mm_Options"
