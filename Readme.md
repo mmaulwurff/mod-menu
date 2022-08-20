@@ -15,3 +15,8 @@ of cluttering Options Menu.
 - Moves all extra submenus from Options Menu to Mod Menu.
 - Adds Mod Menu to simplified Options Menu.
 - Has a chance to put Zandronum-style keybind-only-accessible menus to Mod Menu.
+
+## Limitations
+
+- mod menu detection expects that the first two MENUDEF lumps in the engine
+  package are lumps for the full and the simple option menus.

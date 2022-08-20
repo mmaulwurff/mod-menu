@@ -19,11 +19,10 @@ class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
   private void processMenu(string menuName)
   {
     let descriptor = getDescriptor(menuName);
-    if (descriptor == NULL) return;
-    int officialEnd = findOfficialEnd(descriptor);
+    int modsStart  = findModsStart(descriptor);
 
-    fillModMenuFrom(descriptor, officialEnd);
-    replaceModOptionsWithSelf(descriptor, officialEnd);
+    fillModMenuFrom(descriptor, modsStart);
+    replaceModOptionsWithSelf(descriptor, modsStart);
   }
 
   private static OptionMenuDescriptor getDescriptor(Name aName)
@@ -31,23 +30,34 @@ class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
     return OptionMenuDescriptor(MenuDescriptor.getDescriptor(aName));
   }
 
-  private static int findOfficialEnd(OptionMenuDescriptor descriptor)
+  private static int findModsStart(OptionMenuDescriptor descriptor)
   {
+    // Consider everything that has matching text in the first two menudefs
+    // (full and simple options) 'official'.
+    int    fullMenudefLumpIndex   = Wads.findLump("menudef");
+    int    simpleMenudefLumpIndex = Wads.findLump("menudef", fullMenudefLumpIndex + 1);
+    string menudefContents = Wads.readLump(fullMenudefLumpIndex);
+    // Workaround for Wads.readLump returning a zero-terminated string.
+    // https://github.com/ZDoom/gzdoom/issues/1715
+    menudefContents.deleteLastCharacter();
+    menudefContents = menudefContents .. Wads.readLump(simpleMenudefLumpIndex);
+
     int itemsCount = descriptor.mItems.size();
     for (int i = 0; i < itemsCount; ++i)
     {
       let item = descriptor.mItems[i];
-      if (item.mLabel == "$OPTMNU_CONSOLE") return i;
+      if (item is "OptionMenuItemStaticText") continue;
+      if (menudefContents.indexOf(item.mLabel) == -1) return i;
     }
 
     return itemsCount;
   }
 
-  private static void fillModMenuFrom(OptionMenuDescriptor descriptor, int officialEnd)
+  private static void fillModMenuFrom(OptionMenuDescriptor descriptor, int modsStart)
   {
     let modMenuDescriptor = getDescriptor("mm_Options");
     int itemsCount = descriptor.mItems.size();
-    for (int i = officialEnd + 1; i < itemsCount; ++i)
+    for (int i = modsStart; i < itemsCount; ++i)
     {
       let item = descriptor.mItems[i];
       if (!(item is "OptionMenuItemStaticText") && item.mLabel != "$MM_OPTIONS")
@@ -96,9 +106,9 @@ class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
     }
   }
 
-  private void replaceModOptionsWithSelf(OptionMenuDescriptor descriptor, int officialEnd)
+  private void replaceModOptionsWithSelf(OptionMenuDescriptor descriptor, int modsStart)
   {
-    descriptor.mItems.delete(officialEnd + 2, descriptor.mItems.size());
+    descriptor.mItems.delete(modsStart, descriptor.mItems.size());
     descriptor.mItems.push(self);
   }
 }
