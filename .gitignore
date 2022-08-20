@@ -17,3 +17,6 @@
 !*.txt
 !*.zs
 !*.png
+
+# But do ignore the following files:
+changelog.txt
