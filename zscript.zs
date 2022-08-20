@@ -7,33 +7,31 @@ class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
 {
   override void onMenuCreated()
   {
-    let fullOptionsDescriptor = getDescriptor("OptionsMenu");
-    if (fullOptionsDescriptor == NULL) return;
-    int officialFullOptionsEnd = findOfficialEnd(fullOptionsDescriptor);
-    if (officialFullOptionsEnd == -1) return;
+    processMenu("OptionsMenu");
+    processMenu("OptionsMenuSimple");
 
-    fillModMenuFrom(fullOptionsDescriptor, officialFullOptionsEnd);
     addMenusFromKeys();
     removeDuplicates();
-
-    replaceModOptionsWithSelf(fullOptionsDescriptor, officialFullOptionsEnd);
-
-    let simpleOptionsDescriptor = getDescriptor("OptionsMenuSimple");
-    if (simpleOptionsDescriptor == NULL) return;
-    int officialSimpleOptionsEnd = findOfficialEnd(simpleOptionsDescriptor);
-    if (officialSimpleOptionsEnd == -1) return;
-
-    replaceModOptionsWithSelf(simpleOptionsDescriptor, officialSimpleOptionsEnd);
   }
 
   // private: //////////////////////////////////////////////////////////////////////////////////////
 
-  private OptionMenuDescriptor getDescriptor(Name aName)
+  private void processMenu(string menuName)
+  {
+    let descriptor = getDescriptor(menuName);
+    if (descriptor == NULL) return;
+    int officialEnd = findOfficialEnd(descriptor);
+
+    fillModMenuFrom(descriptor, officialEnd);
+    replaceModOptionsWithSelf(descriptor, officialEnd);
+  }
+
+  private static OptionMenuDescriptor getDescriptor(Name aName)
   {
     return OptionMenuDescriptor(MenuDescriptor.getDescriptor(aName));
   }
 
-  private int findOfficialEnd(OptionMenuDescriptor descriptor)
+  private static int findOfficialEnd(OptionMenuDescriptor descriptor)
   {
     int itemsCount = descriptor.mItems.size();
     for (int i = 0; i < itemsCount; ++i)
@@ -42,10 +40,10 @@ class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
       if (item.mLabel == "$OPTMNU_CONSOLE") return i;
     }
 
-    return -1;
+    return itemsCount;
   }
 
-  private void fillModMenuFrom(OptionMenuDescriptor descriptor, int officialEnd)
+  private static void fillModMenuFrom(OptionMenuDescriptor descriptor, int officialEnd)
   {
     let modMenuDescriptor = getDescriptor("mm_Options");
     int itemsCount = descriptor.mItems.size();
@@ -59,11 +57,11 @@ class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
     }
   }
 
-  private void addMenusFromKeys()
+  private static void addMenusFromKeys()
   {
     // Hack territory!
     let keysMenuDescriptor = getDescriptor("CustomizeControls");
-    let modMenuDescriptor = getDescriptor("mm_Options");
+    let modMenuDescriptor  = getDescriptor("mm_Options");
     int itemsCount = keysMenuDescriptor.mItems.size();
     for (int i = 0; i < itemsCount; ++i)
     {
@@ -81,7 +79,7 @@ class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
     }
   }
 
-  private void removeDuplicates()
+  private static void removeDuplicates()
   {
     let modMenuDescriptor = getDescriptor("mm_Options");
     int itemsCount = modMenuDescriptor.mItems.size();
@@ -100,10 +98,7 @@ class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
 
   private void replaceModOptionsWithSelf(OptionMenuDescriptor descriptor, int officialEnd)
   {
-    int itemsCount = descriptor.mItems.size();
-    for (int i = officialEnd; i < itemsCount; ++i) descriptor.mItems.delete(officialEnd + 1);
-
-    descriptor.mItems.push(new("OptionMenuItemStaticText"));
+    descriptor.mItems.delete(officialEnd + 2, descriptor.mItems.size());
     descriptor.mItems.push(self);
   }
 }
