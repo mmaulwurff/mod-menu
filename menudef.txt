@@ -7,4 +7,5 @@ AddOptionMenu OptionsMenuSimple { mm_Submenu "$MM_OPTIONS", mm_Options }
 OptionMenu mm_Options
 {
   Title "$MM_OPTIONS"
+  Class "mm_Menu"
 }

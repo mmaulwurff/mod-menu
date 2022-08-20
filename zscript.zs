@@ -3,48 +3,28 @@
 
 version 4.8
 
-class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
+class mm_Builder : OptionMenuItem
 {
-  override void onMenuCreated()
+
+  const FULL_OPTIONS_MENU   = "OptionsMenu";
+  const SIMPLE_OPTIONS_MENU = "OptionsMenuSimple";
+  const MOD_MENU            = "mm_Options";
+
+  static void build()
   {
-    processMenu("OptionsMenu");
-    processMenu("OptionsMenuSimple");
+    fillModMenuFrom(FULL_OPTIONS_MENU);
+    fillModMenuFrom(SIMPLE_OPTIONS_MENU);
 
     addMenusFromKeys();
     removeDuplicates();
-
-    removeSelfIfEmpty("OptionsMenu");
-    removeSelfIfEmpty("OptionsMenuSimple");
   }
 
-  // private: //////////////////////////////////////////////////////////////////////////////////////
-
-  private void removeSelfIfEmpty(string menuName)
-  {
-    let modMenuDescriptor = getDescriptor("mm_Options");
-    if (modMenuDescriptor.mItems.size() == 0)
-    {
-      let descriptor = getDescriptor(menuName);
-      descriptor.mItems.pop();
-      destroy();
-    }
-  }
-
-  private void processMenu(string menuName)
-  {
-    let descriptor = getDescriptor(menuName);
-    int modsStart  = findModsStart(descriptor);
-
-    fillModMenuFrom(descriptor, modsStart);
-    replaceModOptionsWithSelf(descriptor, modsStart);
-  }
-
-  private static OptionMenuDescriptor getDescriptor(Name aName)
+  static OptionMenuDescriptor getDescriptor(Name aName)
   {
     return OptionMenuDescriptor(MenuDescriptor.getDescriptor(aName));
   }
 
-  private static int findModsStart(OptionMenuDescriptor descriptor)
+  static int findModsStart(OptionMenuDescriptor descriptor)
   {
     // Consider everything that has matching text in the first two menudefs
     // (full and simple options) 'official'.
@@ -67,9 +47,14 @@ class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
     return itemsCount;
   }
 
-  private static void fillModMenuFrom(OptionMenuDescriptor descriptor, int modsStart)
+  // private: //////////////////////////////////////////////////////////////////////////////////////
+
+  private static void fillModMenuFrom(string menuName)
   {
-    let modMenuDescriptor = getDescriptor("mm_Options");
+    let descriptor = getDescriptor(menuName);
+    int modsStart  = findModsStart(descriptor);
+
+    let modMenuDescriptor = getDescriptor(MOD_MENU);
     int itemsCount = descriptor.mItems.size();
     for (int i = modsStart; i < itemsCount; ++i)
     {
@@ -85,7 +70,7 @@ class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
   {
     // Hack territory!
     let keysMenuDescriptor = getDescriptor("CustomizeControls");
-    let modMenuDescriptor  = getDescriptor("mm_Options");
+    let modMenuDescriptor  = getDescriptor(MOD_MENU);
     int itemsCount = keysMenuDescriptor.mItems.size();
     for (int i = 0; i < itemsCount; ++i)
     {
@@ -96,6 +81,7 @@ class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
       itemAction = itemAction.makeLower();
       bool isOpenMenu = (itemAction.indexOf("open") != -1 && itemAction.indexOf("menu") != -1);
       if (!isOpenMenu) continue;
+      if (itemAction == "openmenu mm_options") continue;
 
       let submenu = new("OptionMenuItemCommand");
       submenu.init(item.mLabel, item.mAction);
@@ -105,7 +91,7 @@ class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
 
   private static void removeDuplicates()
   {
-    let modMenuDescriptor = getDescriptor("mm_Options");
+    let modMenuDescriptor = getDescriptor(MOD_MENU);
     int itemsCount = modMenuDescriptor.mItems.size();
     for (int i = itemsCount - 1; i >= 0; --i)
     {
@@ -120,9 +106,48 @@ class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
     }
   }
 
-  private void replaceModOptionsWithSelf(OptionMenuDescriptor descriptor, int modsStart)
+} // class mm_Builder
+
+class mm_Menu : OptionMenu
+{
+
+  override void init(Menu parent, OptionMenuDescriptor descriptor)
   {
-    descriptor.mItems.delete(modsStart, descriptor.mItems.size());
-    descriptor.mItems.push(self);
+    Super.init(parent, descriptor);
+    mm_Builder.build();
   }
-}
+
+} // class mm_Menu
+
+class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
+{
+
+  override void onMenuCreated()
+  {
+    mm_Builder.build();
+
+    modifyMenu(mm_Builder.FULL_OPTIONS_MENU);
+    modifyMenu(mm_Builder.SIMPLE_OPTIONS_MENU);
+  }
+
+  // private: //////////////////////////////////////////////////////////////////////////////////////
+
+  private void modifyMenu(string menuName)
+  {
+    let optionsDescriptor = mm_Builder.getDescriptor(menuName);
+    let modMenuDescriptor = mm_Builder.getDescriptor(mm_Builder.MOD_MENU);
+    if (modMenuDescriptor.mItems.size() == 0)
+    {
+      // Remove the last item. There is no other mods, so it must be Mod Menu submenu.
+      optionsDescriptor.mItems.pop();
+    }
+    else
+    {
+      // Remove every mod menu, and put Mod Menu submenu back.
+      int modsStart = mm_Builder.findModsStart(optionsDescriptor);
+      optionsDescriptor.mItems.delete(modsStart, optionsDescriptor.mItems.size());
+      optionsDescriptor.mItems.push(self);
+    }
+  }
+
+} // class OptionMenuItemmm_Submenu
