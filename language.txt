@@ -6,3 +6,9 @@
 MM_OPTIONS = "Mod Options";
 MM_KEYS    = "Mod Menu Keys";
 MM_OPEN    = "Open Mod Menu";
+
+[ru]
+
+MM_OPTIONS = "Настройки модов";
+MM_KEYS    = "Клавиши меню настроек модов";
+MM_OPEN    = "Открыть меню настроек модов";
