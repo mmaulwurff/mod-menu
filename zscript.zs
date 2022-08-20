@@ -14,7 +14,7 @@ class mm_Builder : OptionMenuItem
   const MOD_MENU            = "mm_Options";
 
   /**
-   * Builds the contens of Mod Menu by collecting items from the full options
+   * Builds the contents of Mod Menu by collecting items from the full options
    * menu, simple options menu, and from controls menu, and makes sure that
    * there are no duplicates.
    */
@@ -43,7 +43,7 @@ class mm_Builder : OptionMenuItem
    */
   static int findModsStart(OptionMenuDescriptor descriptor)
   {
-    // Consider everything that has matching text in the first two menudefs
+    // Consider everything that has matching text in the first two menudef lumps
     // (full and simple options) 'official'.
     int    fullMenudefLumpIndex   = Wads.findLump("menudef");
     int    simpleMenudefLumpIndex = Wads.findLump("menudef", fullMenudefLumpIndex + 1);
@@ -137,7 +137,7 @@ class mm_Builder : OptionMenuItem
 } // class mm_Builder
 
 /**
- * Mod Menu itself. The init function makes sure that the Mod Menu contens are
+ * Mod Menu itself. The init function makes sure that the Mod Menu contents are
  * built before it is shown.
  */
 class mm_Menu : OptionMenu
