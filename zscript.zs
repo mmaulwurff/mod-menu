@@ -81,7 +81,17 @@ class mm_Builder : OptionMenuItem
       let item = descriptor.mItems[i];
       if (!(item is "OptionMenuItemStaticText") && item.mLabel != "$MM_OPTIONS")
       {
-        modMenuDescriptor.mItems.push(item);
+        let submenu = OptionMenuItemSubmenu(item);
+        if (submenu == NULL)
+        {
+          modMenuDescriptor.mItems.push(item);
+        }
+        else
+        {
+          let replacement = new("ShortenedSubmenu");
+          replacement.init(submenu.mLabel, submenu.mAction, submenu.mParam, submenu.mCentered);
+          modMenuDescriptor.mItems.push(replacement);
+        }
       }
     }
   }
@@ -154,6 +164,53 @@ class mm_Menu : OptionMenu
   }
 
 } // class mm_Menu
+
+/**
+ * This class is a submenu that watches for words in its label like
+ * "options", "settings", etc, and removes them.
+ */
+class ShortenedSubmenu : OptionMenuItemSubmenu
+{
+
+  ShortenedSubmenu init(string label, Name command, int param = 0, bool centered = false)
+  {
+    mOriginalLabel = label;
+    Super.init(label, command, param, centered);
+    return self;
+  }
+
+  override int Draw(OptionMenuDescriptor desc, int y, int indent, bool selected)
+  {
+    // Note the spaces!
+    static const string toRemoves[] =
+    {
+      " options"   , " Options"   , " OPTIONS",
+      " settings"  , " Settings"  , " SETTINGS",
+      "customize " , "Customize " , "CUSTOMIZE "
+    };
+
+    mLabel = mOriginalLabel;
+
+    string translatedLabel = StringTable.localize(mOriginalLabel);
+
+    int removesCount = toRemoves.size();
+    for (int i = 0; i < removesCount; ++i)
+    {
+      string toRemove = toRemoves[i];
+      if (translatedLabel.indexOf(toRemove) != -1 && translatedLabel != toRemove)
+      {
+        translatedLabel.replace(toRemove, "");
+        mLabel = translatedLabel;
+        break;
+      }
+    }
+
+    return Super.draw(desc, y, indent, selected);
+  }
+
+  private string mOriginalLabel;
+
+} // class ShortenedSubmenu
 
 /**
  * The submenu that leads to Mod Menu.
