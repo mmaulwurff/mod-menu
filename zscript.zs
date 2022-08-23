@@ -82,17 +82,11 @@ class mm_Builder : OptionMenuItem
       let item = descriptor.mItems[i];
       if (!(item is "OptionMenuItemStaticText") && item.mLabel != "$MM_OPTIONS")
       {
-        let submenu = OptionMenuItemSubmenu(item);
-        if (submenu == NULL)
-        {
-          modMenuDescriptor.mItems.push(item);
-        }
-        else
-        {
-          let replacement = new("ShortenedSubmenu");
-          replacement.init(submenu.mLabel, submenu.mAction, submenu.mParam, submenu.mCentered);
-          modMenuDescriptor.mItems.push(replacement);
-        }
+        // If it's a submenu, replace it with shortened version.
+        let menu = OptionMenuItemSubmenu(item);
+        modMenuDescriptor.mItems.push(menu == NULL
+          ? item
+          : new("ShortenedSubmenu").init(menu.mLabel, menu.mAction, menu.mParam, menu.mCentered));
       }
     }
   }
@@ -119,12 +113,13 @@ class mm_Builder : OptionMenuItem
       if (!isOpenMenu) continue;
       if (itemAction == "openmenu mm_options") continue;
 
-      let submenu = new("OptionMenuItemCommand");
-      submenu.init(item.mLabel, item.mAction);
-      modMenuDescriptor.mItems.push(submenu);
+      modMenuDescriptor.mItems.push(new("OptionMenuItemCommand").init(item.mLabel, item.mAction));
     }
   }
 
+  /**
+   * Adds a number of hard-coded menus to the Mod Menu, if they are loaded.
+   */
   private static void addNotListedMenus()
   {
     static const string menus[] =
@@ -194,7 +189,7 @@ class mm_Menu : OptionMenu
 class ShortenedSubmenu : OptionMenuItemSubmenu
 {
 
-  ShortenedSubmenu init(string label, Name command, int param = 0, bool centered = false)
+  OptionMenuItem init(string label, Name command, int param = 0, bool centered = false)
   {
     mOriginalLabel = label;
     Super.init(label, command, param, centered);
