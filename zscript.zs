@@ -24,6 +24,7 @@ class mm_Builder : OptionMenuItem
     fillModMenuFrom(SIMPLE_OPTIONS_MENU);
 
     addMenusFromKeys();
+    addNotListedMenus();
 
     // Not only removes duplicates that appear from different menus, but also
     // from consequent calls of build().
@@ -121,6 +122,27 @@ class mm_Builder : OptionMenuItem
       let submenu = new("OptionMenuItemCommand");
       submenu.init(item.mLabel, item.mAction);
       modMenuDescriptor.mItems.push(submenu);
+    }
+  }
+
+  private static void addNotListedMenus()
+  {
+    static const string menus[] =
+    {
+      "FinalDoomer", "Final Doomer +"
+    };
+
+    let modMenuDescriptor = getDescriptor(MOD_MENU);
+
+    int count = menus.size();
+    for (int i = 0; i < count; i += 2)
+    {
+      string menu = menus[i];
+      let descriptor = getDescriptor(menu);
+      if (descriptor == NULL) continue;
+
+      string menuName = menus[i + 1];
+      modMenuDescriptor.mItems.push(new("OptionMenuItemSubmenu").init(menuName, menu));
     }
   }
 
