@@ -24,6 +24,25 @@ of cluttering Options Menu.
 - Zandronum-style menus are detected by scanning Controls menu for anything
   with a command containing "open" and "menu".
 
+## Mods From the Screenshot
+
+[Autoautosave](https://forum.zdoom.org/viewtopic.php?t=59889),
+[Corruption Cards](https://forum.zdoom.org/viewtopic.php?f=43&t=67939),
+[Floor Mod](https://forum.zdoom.org/viewtopic.php?t=76193),
+[Gearbox](https://forum.zdoom.org/viewtopic.php?f=43&t=71086),
+[Immerse](https://forum.zdoom.org/viewtopic.php?f=43&t=61915),
+[Laser Sight](https://forum.zdoom.org/viewtopic.php?f=43&t=61079),
+[Champions](https://forum.zdoom.org/viewtopic.php?t=60456),
+[Rampancy](https://forum.zdoom.org/viewtopic.php?f=43&t=67193),
+[Target Spy](https://forum.zdoom.org/viewtopic.php?f=43&t=60784),
+[Universal Entropy](https://forum.zdoom.org/viewtopic.php?t=66778),
+[Universal Rain and Snow](https://forum.zdoom.org/viewtopic.php?t=70432),
+[Universal Weapon Sway](https://forum.zdoom.org/viewtopic.php?t=68255),
+[Gun Bonsai](https://forum.zdoom.org/viewtopic.php?f=43&t=76080),
+[MariFX Shader Suite](https://forum.zdoom.org/viewtopic.php?t=63394),
+[War Trophies](https://forum.zdoom.org/viewtopic.php?t=67054),
+[Final Doomer +](https://forum.zdoom.org/viewtopic.php?f=43&t=55061).
+
 ## Acknowledgments
 
 - Thanks to mamaluigisbagel for bug reports.
