@@ -25,6 +25,7 @@ class mm_Builder : OptionMenuItem
 
     addMenusFromKeys();
     addNotListedMenus();
+    addMenuFromMain();
 
     // Not only removes duplicates that appear from different menus, but also
     // from consequent calls of build().
@@ -118,13 +119,38 @@ class mm_Builder : OptionMenuItem
   }
 
   /**
+   * Searches the main menu for options.
+   */
+  private static void addMenuFromMain()
+  {
+    let mainDescriptor = ListMenuDescriptor(MenuDescriptor.getDescriptor("MainMenu"));
+    if (mainDescriptor == NULL) return;
+
+    let modMenuDescriptor = getDescriptor(MOD_MENU);
+
+    int count = mainDescriptor.mItems.size();
+    for (int i = 0; i < count; ++i)
+    {
+      string anAction = mainDescriptor.mItems[i].mAction;
+      if (anAction ~== "PlayerClassMenu" || anAction ~== "OptionsMenu") continue;
+
+      let descriptor = getDescriptor(anAction);
+      if (descriptor == NULL) continue;
+
+      string title = descriptor.mTitle.length() ? descriptor.mTitle : anAction;
+      modMenuDescriptor.mItems.push(new("ShortenedSubmenu").init(title, anAction));
+    }
+  }
+
+  /**
    * Adds a number of hard-coded menus to the Mod Menu, if they are loaded.
    */
   private static void addNotListedMenus()
   {
     static const string menus[] =
     {
-      "FinalDoomer", "Final Doomer +"
+      "FinalDoomer", "Final Doomer +",
+      "ParryDooMConfig", "ParryDooM"
     };
 
     let modMenuDescriptor = getDescriptor(MOD_MENU);
