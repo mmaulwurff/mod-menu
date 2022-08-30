@@ -20,16 +20,18 @@ class mm_Builder : OptionMenuItem
    */
   static void build()
   {
-    fillModMenuFrom(FULL_OPTIONS_MENU);
-    fillModMenuFrom(SIMPLE_OPTIONS_MENU);
+    let modMenuDescriptor = getDescriptor(MOD_MENU);
 
-    addMenusFromKeys();
-    addNotListedMenus();
-    addMenuFromMain();
+    fillModMenuFrom(FULL_OPTIONS_MENU, modMenuDescriptor.mItems);
+    fillModMenuFrom(SIMPLE_OPTIONS_MENU, modMenuDescriptor.mItems);
+
+    addMenusFromKeys(modMenuDescriptor.mItems);
+    addNotListedMenus(modMenuDescriptor.mItems);
+    addMenuFromMain(modMenuDescriptor.mItems);
 
     // Not only removes duplicates that appear from different menus, but also
     // from consequent calls of build().
-    removeDuplicates();
+    removeDuplicates(modMenuDescriptor.mItems);
   }
 
   /**
@@ -69,14 +71,13 @@ class mm_Builder : OptionMenuItem
   // private: //////////////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Copies non-standard menu items from a menu to Mod Menu.
+   * Copies non-standard menu items from a menu to target.
    */
-  private static void fillModMenuFrom(string menuName)
+  private static void fillModMenuFrom(string menuName, out Array<OptionMenuItem> target)
   {
     let descriptor = getDescriptor(menuName);
     int modsStart  = findModsStart(descriptor);
 
-    let modMenuDescriptor = getDescriptor(MOD_MENU);
     int itemsCount = descriptor.mItems.size();
     for (int i = modsStart; i < itemsCount; ++i)
     {
@@ -85,7 +86,7 @@ class mm_Builder : OptionMenuItem
       {
         // If it's a submenu, replace it with shortened version.
         let menu = OptionMenuItemSubmenu(item);
-        modMenuDescriptor.mItems.push(menu == NULL
+        target.push(menu == NULL
           ? item
           : new("ShortenedSubmenu").init(menu.mLabel, menu.mAction, menu.mParam, menu.mCentered));
       }
@@ -93,15 +94,14 @@ class mm_Builder : OptionMenuItem
   }
 
   /**
-   * For each "open menu" entry in Controls, creates an entry in Mod Menu.
+   * For each "open menu" entry in Controls, creates an item in target.
    */
-  private static void addMenusFromKeys()
+  private static void addMenusFromKeys(out Array<OptionMenuItem> target)
   {
     // Searches for controls that have an action that contains "open" and "menu"
-    // and puts creates a corresponding entry in Mod Menu.
+    // and puts creates a corresponding item in target.
 
     let keysMenuDescriptor = getDescriptor("CustomizeControls");
-    let modMenuDescriptor  = getDescriptor(MOD_MENU);
     int itemsCount = keysMenuDescriptor.mItems.size();
     for (int i = 0; i < itemsCount; ++i)
     {
@@ -114,19 +114,17 @@ class mm_Builder : OptionMenuItem
       if (!isOpenMenu) continue;
       if (itemAction == "openmenu mm_options") continue;
 
-      modMenuDescriptor.mItems.push(new("OptionMenuItemCommand").init(item.mLabel, item.mAction));
+      target.push(new("OptionMenuItemCommand").init(item.mLabel, item.mAction));
     }
   }
 
   /**
    * Searches the main menu for options.
    */
-  private static void addMenuFromMain()
+  private static void addMenuFromMain(out Array<OptionMenuItem> target)
   {
     let mainDescriptor = ListMenuDescriptor(MenuDescriptor.getDescriptor("MainMenu"));
     if (mainDescriptor == NULL) return;
-
-    let modMenuDescriptor = getDescriptor(MOD_MENU);
 
     int count = mainDescriptor.mItems.size();
     for (int i = 0; i < count; ++i)
@@ -138,22 +136,20 @@ class mm_Builder : OptionMenuItem
       if (descriptor == NULL) continue;
 
       string title = descriptor.mTitle.length() ? descriptor.mTitle : anAction;
-      modMenuDescriptor.mItems.push(new("ShortenedSubmenu").init(title, anAction));
+      target.push(new("ShortenedSubmenu").init(title, anAction));
     }
   }
 
   /**
-   * Adds a number of hard-coded menus to the Mod Menu, if they are loaded.
+   * Adds a number of hard-coded menus to target, if they are loaded.
    */
-  private static void addNotListedMenus()
+  private static void addNotListedMenus(out Array<OptionMenuItem> target)
   {
     static const string menus[] =
     {
       "FinalDoomer", "Final Doomer +",
       "ParryDooMConfig", "ParryDooM"
     };
-
-    let modMenuDescriptor = getDescriptor(MOD_MENU);
 
     int count = menus.size();
     for (int i = 0; i < count; i += 2)
@@ -163,24 +159,23 @@ class mm_Builder : OptionMenuItem
       if (descriptor == NULL) continue;
 
       string menuName = menus[i + 1];
-      modMenuDescriptor.mItems.push(new("OptionMenuItemSubmenu").init(menuName, menu));
+      target.push(new("OptionMenuItemSubmenu").init(menuName, menu));
     }
   }
 
   /**
-   * Removes duplicate Mod Menu elements, so every entry occurs only once.
+   * Removes duplicate items, so every entry occurs only once.
    */
-  private static void removeDuplicates()
+  private static void removeDuplicates(out Array<OptionMenuItem> items)
   {
-    let modMenuDescriptor = getDescriptor(MOD_MENU);
-    int itemsCount = modMenuDescriptor.mItems.size();
+    int itemsCount = items.size();
     for (int i = itemsCount - 1; i >= 0; --i)
     {
       for (int j = i - 1; j >= 0; --j)
       {
-        if (modMenuDescriptor.mItems[i].mAction == modMenuDescriptor.mItems[j].mAction)
+        if (items[i].mAction == items[j].mAction)
         {
-          modMenuDescriptor.mItems.delete(i);
+          items.delete(i);
           break;
         }
       }
