@@ -16,7 +16,7 @@ of cluttering Options Menu.
 - Adds Mod Menu to simplified Options Menu.
 - Has a chance to put Zandronum-style keybind-only-accessible menus to Mod Menu.
 - A key to open Mod Menu.
-- Removes redundant words like "options" and "strings".
+- Removes redundant words like "options" and "settings".
 
 ## Limitations
 
@@ -46,4 +46,4 @@ of cluttering Options Menu.
 
 ## Acknowledgments
 
-- Thanks to mamaluigisbagel for bug reports.
+- Bug reports: mamaluigisbagel, cosmos10040.
