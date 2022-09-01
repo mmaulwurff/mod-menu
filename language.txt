@@ -13,7 +13,7 @@ MM_OPTIONS = "Настройки модов";
 MM_KEYS    = "Клавиши меню настроек модов";
 MM_OPEN    = "Открыть меню настроек модов";
 
-[enu default]
+[pt]
 
 MM_OPTIONS = "Opções do Mod";
 MM_KEYS    = "Teclas do Menu de Mods";
