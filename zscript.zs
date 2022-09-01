@@ -3,55 +3,48 @@
 
 version 4.8
 
-/**
- * The core of Mod Menu. It builds the contents of Mod Menu.
- */
+/// The core of Mod Menu. It builds the contents of Mod Menu.
 class mm_Builder : OptionMenuItem
 {
 
   const FULL_OPTIONS_MENU   = "OptionsMenu";
   const SIMPLE_OPTIONS_MENU = "OptionsMenuSimple";
-  const MOD_MENU            = "mm_Options";
 
-  /**
-   * Builds the contents of Mod Menu by collecting items from the full options
-   * menu, simple options menu, and from controls menu, and makes sure that
-   * there are no duplicates.
-   */
-  static void build()
+  /// Builds the contents of Mod Menu by collecting items from the full options
+  /// menu, simple options menu, and from controls menu, and makes sure that
+  /// there are no duplicates.
+  static OptionMenuDescriptor build()
   {
-    let modMenuDescriptor = getDescriptor(MOD_MENU);
+    let modMenuDescriptor = getDescriptor("mm_Options");
 
-    fillModMenuFrom(FULL_OPTIONS_MENU, modMenuDescriptor.mItems);
+    fillModMenuFrom(FULL_OPTIONS_MENU,   modMenuDescriptor.mItems);
     fillModMenuFrom(SIMPLE_OPTIONS_MENU, modMenuDescriptor.mItems);
 
-    addMenusFromKeys(modMenuDescriptor.mItems);
+    addMenusFromKeys (modMenuDescriptor.mItems);
     addNotListedMenus(modMenuDescriptor.mItems);
-    addMenuFromMain(modMenuDescriptor.mItems);
+    addMenuFromMain  (modMenuDescriptor.mItems);
 
     // Not only removes duplicates that appear from different menus, but also
     // from consequent calls of build().
     removeDuplicates(modMenuDescriptor.mItems);
+
+    return modMenuDescriptor;
   }
 
-  /**
-   * Returns option menu descriptor by the menu name.
-   */
+  /// Returns option menu descriptor by the menu name.
   static OptionMenuDescriptor getDescriptor(Name aName)
   {
     return OptionMenuDescriptor(MenuDescriptor.getDescriptor(aName));
   }
 
-  /**
-   * Finds the index of the first non-standard options menu element.
-   */
+  /// Finds the index of the first non-standard options menu element.
   static int findModsStart(OptionMenuDescriptor descriptor)
   {
     // Consider everything that has matching text in the first two menudef lumps
     // (full and simple options) 'official'.
     int    fullMenudefLumpIndex   = Wads.findLump("menudef");
     int    simpleMenudefLumpIndex = Wads.findLump("menudef", fullMenudefLumpIndex + 1);
-    string menudefContents = Wads.readLump(fullMenudefLumpIndex);
+    string menudefContents        = Wads.readLump(fullMenudefLumpIndex);
     // Workaround for Wads.readLump returning a zero-terminated string.
     // https://github.com/ZDoom/gzdoom/issues/1715
     menudefContents.deleteLastCharacter();
@@ -68,12 +61,8 @@ class mm_Builder : OptionMenuItem
     return itemsCount;
   }
 
-  // private: //////////////////////////////////////////////////////////////////////////////////////
-
-  /**
-   * Copies non-standard menu items from a menu to target.
-   */
-  private static void fillModMenuFrom(string menuName, out Array<OptionMenuItem> target)
+  /// Copies non-standard menu items from a menu to target.
+  private static void fillModMenuFrom(string menuName, out array<OptionMenuItem> target)
   {
     let descriptor = getDescriptor(menuName);
     int modsStart  = findModsStart(descriptor);
@@ -93,10 +82,8 @@ class mm_Builder : OptionMenuItem
     }
   }
 
-  /**
-   * For each "open menu" entry in Controls, creates an item in target.
-   */
-  private static void addMenusFromKeys(out Array<OptionMenuItem> target)
+  /// For each "open menu" entry in Controls, creates an item in target.
+  private static void addMenusFromKeys(out array<OptionMenuItem> target)
   {
     // Searches for controls that have an action that contains "open" and "menu"
     // and puts creates a corresponding item in target.
@@ -118,10 +105,8 @@ class mm_Builder : OptionMenuItem
     }
   }
 
-  /**
-   * Searches the main menu for options.
-   */
-  private static void addMenuFromMain(out Array<OptionMenuItem> target)
+  /// Searches the main menu for options.
+  private static void addMenuFromMain(out array<OptionMenuItem> target)
   {
     let mainDescriptor = ListMenuDescriptor(MenuDescriptor.getDescriptor("MainMenu"));
     if (mainDescriptor == NULL) return;
@@ -140,10 +125,8 @@ class mm_Builder : OptionMenuItem
     }
   }
 
-  /**
-   * Adds a number of hard-coded menus to target, if they are loaded.
-   */
-  private static void addNotListedMenus(out Array<OptionMenuItem> target)
+  /// Adds a number of hard-coded menus to target, if they are loaded.
+  private static void addNotListedMenus(out array<OptionMenuItem> target)
   {
     static const string menus[] =
     {
@@ -163,10 +146,8 @@ class mm_Builder : OptionMenuItem
     }
   }
 
-  /**
-   * Removes duplicate items, so every entry occurs only once.
-   */
-  private static void removeDuplicates(out Array<OptionMenuItem> items)
+  /// Removes duplicate items, so every entry occurs only once.
+  private static void removeDuplicates(out array<OptionMenuItem> items)
   {
     int itemsCount = items.size();
     for (int i = itemsCount - 1; i >= 0; --i)
@@ -184,10 +165,8 @@ class mm_Builder : OptionMenuItem
 
 } // class mm_Builder
 
-/**
- * Mod Menu itself. The init function makes sure that the Mod Menu contents are
- * built before it is shown.
- */
+/// Mod Menu itself. The init function makes sure that the Mod Menu contents are
+/// built before it is shown.
 class mm_Menu : OptionMenu
 {
 
@@ -195,7 +174,7 @@ class mm_Menu : OptionMenu
   {
     Super.init(parent, descriptor);
 
-    // This build fills the Mod Menu when it is opened before mm_Submenu is
+    // Fills the Mod Menu even when it is opened before mm_Submenu is
     // instantiated: when the game is started without opening an options menu,
     // and then Mod Menu is opened via a bound key.
     mm_Builder.build();
@@ -203,10 +182,8 @@ class mm_Menu : OptionMenu
 
 } // class mm_Menu
 
-/**
- * This class is a submenu that watches for words in its label like
- * "options", "settings", etc, and removes them.
- */
+/// This class is a submenu that watches for words in its label like "options",
+/// "settings", etc, and removes them.
 class ShortenedSubmenu : OptionMenuItemSubmenu
 {
 
@@ -250,36 +227,25 @@ class ShortenedSubmenu : OptionMenuItemSubmenu
 
 } // class ShortenedSubmenu
 
-/**
- * The submenu that leads to Mod Menu.
- */
+/// The submenu that leads to Mod Menu.
 class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
 {
 
-  /**
-   * Is called when Options Menu is created, it fills the Mod Menu and modifies
-   * the Options Menu.
-   */
+  /// Is called when Options Menu is created, it fills the Mod Menu and modifies
+  /// the Options Menu.
   override void onMenuCreated()
   {
-    // This build fills the Mod Menu when the Mod Menu is opened from Options
-    // Menu.
-    mm_Builder.build();
+    let modMenuDescriptor = mm_Builder.build();
 
-    modifyMenu(mm_Builder.FULL_OPTIONS_MENU);
-    modifyMenu(mm_Builder.SIMPLE_OPTIONS_MENU);
+    modifyMenu(mm_Builder.FULL_OPTIONS_MENU,   modMenuDescriptor);
+    modifyMenu(mm_Builder.SIMPLE_OPTIONS_MENU, modMenuDescriptor);
   }
 
-  // private: //////////////////////////////////////////////////////////////////////////////////////
-
-  /**
-   * Either replaces mod menu entries with itself, or removes itself from
-   * Options Menu.
-   */
-  private void modifyMenu(string menuName)
+  /// Either replaces mod menu entries with itself, or removes itself from
+  /// Options Menu.
+  private void modifyMenu(string menuName, OptionMenuDescriptor modMenuDescriptor)
   {
     let optionsDescriptor = mm_Builder.getDescriptor(menuName);
-    let modMenuDescriptor = mm_Builder.getDescriptor(mm_Builder.MOD_MENU);
     if (modMenuDescriptor.mItems.size() == 0)
     {
       // Remove the last item. There is no other mods, so it must be Mod Menu submenu.
