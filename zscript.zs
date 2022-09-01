@@ -4,18 +4,32 @@
 version 4.8
 
 /// The core of Mod Menu. It builds the contents of Mod Menu.
-class mm_Builder : OptionMenuItem
+class OptionMenuItemmm_Injector : OptionMenuItem
 {
 
   const FULL_OPTIONS_MENU   = "OptionsMenu";
   const SIMPLE_OPTIONS_MENU = "OptionsMenuSimple";
+  const MOD_MENU            = "mm_Options";
+
+  void init() {}
+
+  /// Is called when Options Menu is created, it fills the Mod Menu and modifies
+  /// the Options Menu.
+  override void onMenuCreated()
+  {
+    let  modMenuDescriptor = build();
+    bool hasModMenus = modMenuDescriptor.mItems.size() != 0;
+
+    modifyMenu(FULL_OPTIONS_MENU,   hasModMenus);
+    modifyMenu(SIMPLE_OPTIONS_MENU, hasModMenus);
+  }
 
   /// Builds the contents of Mod Menu by collecting items from the full options
   /// menu, simple options menu, and from controls menu, and makes sure that
   /// there are no duplicates.
   static OptionMenuDescriptor build()
   {
-    let modMenuDescriptor = getDescriptor("mm_Options");
+    let modMenuDescriptor = getDescriptor(MOD_MENU);
 
     fillModMenuFrom(FULL_OPTIONS_MENU,   modMenuDescriptor.mItems);
     fillModMenuFrom(SIMPLE_OPTIONS_MENU, modMenuDescriptor.mItems);
@@ -31,14 +45,32 @@ class mm_Builder : OptionMenuItem
     return modMenuDescriptor;
   }
 
+  /// Replaces mod menus with Mod Menu.
+  private void modifyMenu(string menuName, bool hasModMenus)
+  {
+    let optionsDescriptor = getDescriptor(menuName);
+    if (hasModMenus)
+    {
+      // Remove everything mod-related and add Mod Menu.
+      int modsStart = findModsStart(optionsDescriptor);
+      optionsDescriptor.mItems.delete(modsStart, optionsDescriptor.mItems.size());
+      optionsDescriptor.mItems.push(new("OptionMenuItemSubmenu").init("$MM_OPTIONS", MOD_MENU));
+    }
+    else
+    {
+      // Remove the last item. There is no other mods, so it must be the injector.
+      optionsDescriptor.mItems.pop();
+    }
+  }
+
   /// Returns option menu descriptor by the menu name.
-  static OptionMenuDescriptor getDescriptor(Name aName)
+  private static OptionMenuDescriptor getDescriptor(Name aName)
   {
     return OptionMenuDescriptor(MenuDescriptor.getDescriptor(aName));
   }
 
   /// Finds the index of the first non-standard options menu element.
-  static int findModsStart(OptionMenuDescriptor descriptor)
+  private static int findModsStart(OptionMenuDescriptor descriptor)
   {
     // Consider everything that has matching text in the first two menudef lumps
     // (full and simple options) 'official'.
@@ -55,6 +87,7 @@ class mm_Builder : OptionMenuItem
     {
       let item = descriptor.mItems[i];
       if (item is "OptionMenuItemStaticText") continue;
+      if (item is "OptionMenuItemmm_Injector") return i;
       if (menudefContents.indexOf(item.mLabel) == -1) return i;
     }
 
@@ -71,14 +104,12 @@ class mm_Builder : OptionMenuItem
     for (int i = modsStart; i < itemsCount; ++i)
     {
       let item = descriptor.mItems[i];
-      if (!(item is "OptionMenuItemStaticText") && item.mLabel != "$MM_OPTIONS")
-      {
-        // If it's a submenu, replace it with shortened version.
-        let menu = OptionMenuItemSubmenu(item);
-        target.push(menu == NULL
-          ? item
-          : new("ShortenedSubmenu").init(menu.mLabel, menu.mAction, menu.mParam, menu.mCentered));
-      }
+      if (item is "OptionMenuItemStaticText" || item is "OptionMenuItemmm_Injector") continue;
+      if (item.mLabel == "$MM_OPTIONS") continue;
+
+      // If it's a submenu, replace it with shortened version.
+      let menu = OptionMenuItemSubmenu(item);
+      target.push(menu == NULL ? item : new("mm_ShortenedSubmenu").init(menu.mLabel, menu.mAction));
     }
   }
 
@@ -121,7 +152,7 @@ class mm_Builder : OptionMenuItem
       if (descriptor == NULL) continue;
 
       string title = descriptor.mTitle.length() ? descriptor.mTitle : anAction;
-      target.push(new("ShortenedSubmenu").init(title, anAction));
+      target.push(new("mm_ShortenedSubmenu").init(title, anAction));
     }
   }
 
@@ -163,7 +194,7 @@ class mm_Builder : OptionMenuItem
     }
   }
 
-} // class mm_Builder
+} // class OptionMenuItemmm_Injector
 
 /// Mod Menu itself. The init function makes sure that the Mod Menu contents are
 /// built before it is shown.
@@ -177,20 +208,20 @@ class mm_Menu : OptionMenu
     // Fills the Mod Menu even when it is opened before mm_Submenu is
     // instantiated: when the game is started without opening an options menu,
     // and then Mod Menu is opened via a bound key.
-    mm_Builder.build();
+    OptionMenuItemmm_Injector.build();
   }
 
 } // class mm_Menu
 
 /// This class is a submenu that watches for words in its label like "options",
 /// "settings", etc, and removes them.
-class ShortenedSubmenu : OptionMenuItemSubmenu
+class mm_ShortenedSubmenu : OptionMenuItemSubmenu
 {
 
-  OptionMenuItem init(string label, Name command, int param = 0, bool centered = false)
+  OptionMenuItem init(string label, Name command)
   {
     mOriginalLabel = label;
-    Super.init(label, command, param, centered);
+    Super.init(label, command);
     return self;
   }
 
@@ -225,39 +256,4 @@ class ShortenedSubmenu : OptionMenuItemSubmenu
 
   private string mOriginalLabel;
 
-} // class ShortenedSubmenu
-
-/// The submenu that leads to Mod Menu.
-class OptionMenuItemmm_Submenu : OptionMenuItemSubmenu
-{
-
-  /// Is called when Options Menu is created, it fills the Mod Menu and modifies
-  /// the Options Menu.
-  override void onMenuCreated()
-  {
-    let modMenuDescriptor = mm_Builder.build();
-
-    modifyMenu(mm_Builder.FULL_OPTIONS_MENU,   modMenuDescriptor);
-    modifyMenu(mm_Builder.SIMPLE_OPTIONS_MENU, modMenuDescriptor);
-  }
-
-  /// Either replaces mod menu entries with itself, or removes itself from
-  /// Options Menu.
-  private void modifyMenu(string menuName, OptionMenuDescriptor modMenuDescriptor)
-  {
-    let optionsDescriptor = mm_Builder.getDescriptor(menuName);
-    if (modMenuDescriptor.mItems.size() == 0)
-    {
-      // Remove the last item. There is no other mods, so it must be Mod Menu submenu.
-      optionsDescriptor.mItems.pop();
-    }
-    else
-    {
-      // Remove every mod menu, and put Mod Menu submenu back.
-      int modsStart = mm_Builder.findModsStart(optionsDescriptor);
-      optionsDescriptor.mItems.delete(modsStart, optionsDescriptor.mItems.size());
-      optionsDescriptor.mItems.push(self);
-    }
-  }
-
-} // class OptionMenuItemmm_Submenu
+} // class mm_ShortenedSubmenu
