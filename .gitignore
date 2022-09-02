@@ -17,6 +17,7 @@
 !*.txt
 !*.zs
 !*.png
+!*.json
 
 # But do ignore the following files:
 changelog.txt

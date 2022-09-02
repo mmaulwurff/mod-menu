@@ -17,6 +17,7 @@ of cluttering Options Menu.
 - Has a chance to put Zandronum-style keybind-only-accessible menus to Mod Menu.
 - A key to open Mod Menu.
 - Removes redundant words like "options" and "settings".
+- Extensible: undetected menus can be added in `more-menus.json`.
 
 ## Limitations
 

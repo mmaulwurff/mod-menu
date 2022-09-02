@@ -159,21 +159,22 @@ class OptionMenuItemmm_Injector : OptionMenuItem
   /// Adds a number of hard-coded menus to target, if they are loaded.
   private static void addNotListedMenus(out array<OptionMenuItem> target)
   {
-    static const string menus[] =
+    for (int lumpIndex = Wads.findLump("more-menus");
+         lumpIndex != -1;
+         lumpIndex = Wads.findLump("more-menus", lumpIndex + 1))
     {
-      "FinalDoomer", "Final Doomer +",
-      "ParryDooMConfig", "ParryDooM"
-    };
+      let menus = Dictionary.fromString(Wads.readLump(lumpIndex));
 
-    int count = menus.size();
-    for (int i = 0; i < count; i += 2)
-    {
-      string menu = menus[i];
-      let descriptor = getDescriptor(menu);
-      if (descriptor == NULL) continue;
+      let i = DictionaryIterator.create(menus);
+      while (i.next())
+      {
+        string menu = i.key();
+        let descriptor = getDescriptor(menu);
+        if (descriptor == NULL) continue;
 
-      string menuName = menus[i + 1];
-      target.push(new("OptionMenuItemSubmenu").init(menuName, menu));
+        string menuName = i.value();
+        target.push(new("mm_ShortenedSubmenu").init(menuName, menu));
+      }
     }
   }
 
