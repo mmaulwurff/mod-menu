@@ -12,3 +12,9 @@ MM_OPEN    = "Open Mod Menu";
 MM_OPTIONS = "Настройки модов";
 MM_KEYS    = "Клавиши меню настроек модов";
 MM_OPEN    = "Открыть меню настроек модов";
+
+[pt]
+
+MM_OPTIONS = "Opções do Mod";
+MM_KEYS    = "Teclas do Menu de Mods";
+MM_OPEN    = "Abrir Menu de Mods";
