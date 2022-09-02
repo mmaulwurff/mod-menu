@@ -18,6 +18,7 @@
 !*.zs
 !*.png
 !*.json
+!*.license
 
 # But do ignore the following files:
 changelog.txt

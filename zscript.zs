@@ -156,14 +156,16 @@ class OptionMenuItemmm_Injector : OptionMenuItem
     }
   }
 
-  /// Adds a number of hard-coded menus to target, if they are loaded.
+  /// Adds user-defined menus to target, if they are loaded.
   private static void addNotListedMenus(out array<OptionMenuItem> target)
   {
     for (int lumpIndex = Wads.findLump("more-menus");
          lumpIndex != -1;
          lumpIndex = Wads.findLump("more-menus", lumpIndex + 1))
     {
-      let menus = Dictionary.fromString(Wads.readLump(lumpIndex));
+      string dictionaryString = Wads.readLump(lumpIndex);
+      if (dictionaryString.length() == 0 || dictionaryString.left(1) != "{") continue;
+      let menus = Dictionary.fromString(dictionaryString);
 
       let i = DictionaryIterator.create(menus);
       while (i.next())

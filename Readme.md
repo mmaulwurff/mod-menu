@@ -48,3 +48,4 @@ of cluttering Options Menu.
 ## Acknowledgments
 
 - Bug reports: mamaluigisbagel, cosmos10040.
+- Brazilian Portuguese translation: generic name guy.
