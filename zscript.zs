@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2022 Alexander Kromm <mmaulwurff@gmail.com>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-version 4.8
+version 4.6.1
 
 /// The core of Mod Menu. It builds the contents of Mod Menu.
 class OptionMenuItemmm_Injector : OptionMenuItem
