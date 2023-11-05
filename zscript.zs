@@ -1,66 +1,109 @@
-// SPDX-FileCopyrightText: 2022 Alexander Kromm <mmaulwurff@gmail.com>
+// SPDX-FileCopyrightText: 2022-2023 Alexander Kromm <mmaulwurff@gmail.com>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-version 4.6.1
+version 4.11
 
-/// The core of Mod Menu. It builds the contents of Mod Menu.
+/// Entry point 1. Builds Mod Menu when an options menu is opened before Mod Menu.
 class OptionMenuItemmm_Injector : OptionMenuItem
 {
 
+  void init() {}
+
+  override void onMenuCreated()
+  {
+    mm_Builder.build();
+  }
+
+} // class OptionMenuItemmm_Injector
+
+/// Entry point 2. Builds Mod Menu when Mod Menu is opened before an options menu.
+class mm_Menu : OptionMenu
+{
+
+  override void init(Menu parent, OptionMenuDescriptor descriptor)
+  {
+    Super.init(parent, descriptor);
+
+    mm_Builder.build();
+  }
+
+} // class mm_Menu
+
+/// Builds Mod Menu: collects modded menus and cleans up base option menus.
+class mm_Builder : OptionMenuItem
+{
   const FULL_OPTIONS_MENU   = "OptionsMenu";
   const SIMPLE_OPTIONS_MENU = "OptionsMenuSimple";
   const MOD_MENU            = "mm_Options";
 
-  void init() {}
-
-  /// Is called when Options Menu is created, it fills the Mod Menu and modifies
-  /// the Options Menu.
-  override void onMenuCreated()
+  static void build()
   {
-    let  modMenuDescriptor = build();
-    bool hasModMenus = modMenuDescriptor.mItems.size() != 0;
+    let modMenuDescriptor = getDescriptor(MOD_MENU);
 
-    modifyMenu(FULL_OPTIONS_MENU,   hasModMenus);
-    modifyMenu(SIMPLE_OPTIONS_MENU, hasModMenus);
+    if (modMenuDescriptor.mItems.size() != 0) return;
+
+    let itemInfo = new("mm_ItemInfo").init();
+
+    fill(itemInfo, modMenuDescriptor.mItems);
+
+    bool hasModMenus = (modMenuDescriptor.mItems.size() != 0);
+
+    modifyMenu(FULL_OPTIONS_MENU,   hasModMenus, itemInfo);
+    modifyMenu(SIMPLE_OPTIONS_MENU, hasModMenus, itemInfo);
   }
 
   /// Builds the contents of Mod Menu by collecting items from the full options
   /// menu, simple options menu, and from controls menu, and makes sure that
   /// there are no duplicates.
-  static OptionMenuDescriptor build()
+  private static void fill(mm_ItemInfo itemInfo, out array<OptionMenuItem> target)
   {
-    let modMenuDescriptor = getDescriptor(MOD_MENU);
+    fillModMenuFrom(FULL_OPTIONS_MENU,   itemInfo, target);
+    fillModMenuFrom(SIMPLE_OPTIONS_MENU, itemInfo, target);
+    addMenusFromKeys (target);
+    addNotListedMenus(target);
+    addMenuFromMain  (target);
 
-    fillModMenuFrom(FULL_OPTIONS_MENU,   modMenuDescriptor.mItems);
-    fillModMenuFrom(SIMPLE_OPTIONS_MENU, modMenuDescriptor.mItems);
-
-    addMenusFromKeys (modMenuDescriptor.mItems);
-    addNotListedMenus(modMenuDescriptor.mItems);
-    addMenuFromMain  (modMenuDescriptor.mItems);
-
-    // Not only removes duplicates that appear from different menus, but also
-    // from consequent calls of build().
-    removeDuplicates(modMenuDescriptor.mItems);
-
-    return modMenuDescriptor;
+    removeDuplicates(target);
   }
 
   /// Replaces mod menus with Mod Menu.
-  private void modifyMenu(string menuName, bool hasModMenus)
+  private static void modifyMenu(string menuName, bool hasModMenus, mm_ItemInfo itemInfo)
   {
     let optionsDescriptor = getDescriptor(menuName);
-    if (hasModMenus)
-    {
-      // Remove everything mod-related and add Mod Menu.
-      int modsStart = findModsStart(optionsDescriptor);
-      optionsDescriptor.mItems.delete(modsStart, optionsDescriptor.mItems.size());
-      optionsDescriptor.mItems.push(new("OptionMenuItemSubmenu").init("$MM_OPTIONS", MOD_MENU));
-    }
-    else
+    if (!hasModMenus)
     {
       // Remove the last item. There is no other mods, so it must be the injector.
       optionsDescriptor.mItems.pop();
+      return;
     }
+
+    // Remove everything mod-related.
+    Array<OptionMenuItem> baseItems;
+    bool isPreviousLineBlank = false;
+    foreach (item : optionsDescriptor.mItems)
+    {
+      if (item is "OptionMenuItemmm_Injector") continue;
+
+      // This is sometimes added to the menu by GZDoom code.
+      if (item.mLabel == "---------------") continue;
+
+      // Consecutive blank lines.
+      if (item is "OptionMenuItemStaticText" && item.mLabel.length() <= 1)
+      {
+        if (isPreviousLineBlank) continue;
+        else isPreviousLineBlank = true;
+      }
+      else
+      {
+        isPreviousLineBlank = false;
+      }
+
+      if (!itemInfo.isModded(item)) baseItems.push(item);
+    }
+    optionsDescriptor.mItems.move(baseItems);
+
+    // Add Mod Menu.
+    optionsDescriptor.mItems.push(new("OptionMenuItemSubmenu").init("$MM_OPTIONS", MOD_MENU));
   }
 
   /// Returns option menu descriptor by the menu name.
@@ -69,43 +112,18 @@ class OptionMenuItemmm_Injector : OptionMenuItem
     return OptionMenuDescriptor(MenuDescriptor.getDescriptor(aName));
   }
 
-  /// Finds the index of the first non-standard options menu element.
-  private static int findModsStart(OptionMenuDescriptor descriptor)
-  {
-    // Consider everything that has matching text in the first two menudef lumps
-    // (full and simple options) 'official'.
-    int    fullMenudefLumpIndex   = Wads.findLump("menudef");
-    int    simpleMenudefLumpIndex = Wads.findLump("menudef", fullMenudefLumpIndex + 1);
-    string menudefContents        = Wads.readLump(fullMenudefLumpIndex);
-    // Workaround for Wads.readLump returning a zero-terminated string.
-    // https://github.com/ZDoom/gzdoom/issues/1715
-    menudefContents.deleteLastCharacter();
-    menudefContents = menudefContents .. Wads.readLump(simpleMenudefLumpIndex);
-
-    int itemsCount = descriptor.mItems.size();
-    for (int i = 0; i < itemsCount; ++i)
-    {
-      let item = descriptor.mItems[i];
-      if (item is "OptionMenuItemStaticText") continue;
-      if (item is "OptionMenuItemmm_Injector") return i;
-      if (menudefContents.indexOf(item.mLabel) == -1) return i;
-    }
-
-    return itemsCount;
-  }
-
   /// Copies non-standard menu items from a menu to target.
-  private static void fillModMenuFrom(string menuName, out array<OptionMenuItem> target)
+  private static void fillModMenuFrom( string menuName
+                                     , mm_ItemInfo itemInfo
+                                     , out array<OptionMenuItem> target
+                                     )
   {
     let descriptor = getDescriptor(menuName);
-    int modsStart  = findModsStart(descriptor);
-
-    int itemsCount = descriptor.mItems.size();
-    for (int i = modsStart; i < itemsCount; ++i)
+    foreach (item : descriptor.mItems)
     {
-      let item = descriptor.mItems[i];
-      if (item is "OptionMenuItemStaticText" || item is "OptionMenuItemmm_Injector") continue;
-      if (item.mLabel == "$MM_OPTIONS") continue;
+      if (!itemInfo.isModded(item)) continue;
+      if (item is "OptionMenuItemmm_Injector") continue;
+      if (item is "OptionMenuItemStaticText") continue;
 
       // If it's a submenu, replace it with shortened version.
       let menu = OptionMenuItemSubmenu(item);
@@ -197,24 +215,7 @@ class OptionMenuItemmm_Injector : OptionMenuItem
     }
   }
 
-} // class OptionMenuItemmm_Injector
-
-/// Mod Menu itself. The init function makes sure that the Mod Menu contents are
-/// built before it is shown.
-class mm_Menu : OptionMenu
-{
-
-  override void init(Menu parent, OptionMenuDescriptor descriptor)
-  {
-    Super.init(parent, descriptor);
-
-    // Fills the Mod Menu even when it is opened before mm_Submenu is
-    // instantiated: when the game is started without opening an options menu,
-    // and then Mod Menu is opened via a bound key.
-    OptionMenuItemmm_Injector.build();
-  }
-
-} // class mm_Menu
+} // class mm_Builder
 
 /// This class is a submenu that watches for words in its label like "options",
 /// "settings", etc, and removes them.
@@ -260,3 +261,25 @@ class mm_ShortenedSubmenu : OptionMenuItemSubmenu
   private string mOriginalLabel;
 
 } // class mm_ShortenedSubmenu
+
+class mm_ItemInfo ui
+{
+
+  mm_ItemInfo init()
+  {
+    int fullMenuDefLumpIndex   = Wads.findLump("menudef");
+    int simpleMenuDefLumpIndex = Wads.findLump("menudef", fullMenudefLumpIndex + 1);
+    mMenuDefContents           = Wads.readLump(fullMenudefLumpIndex)
+                              .. Wads.readLump(simpleMenudefLumpIndex);
+
+    return self;
+  }
+
+  bool isModded(OptionMenuItem item)
+  {
+    return (mMenuDefContents.indexOf(item.mLabel) == -1);
+  }
+
+  private string mMenuDefContents;
+
+} // class mm_ItemInfo
