@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2022 Alexander Kromm <mmaulwurff@gmail.com>
+SPDX-FileCopyrightText: 2022-2023 Alexander Kromm <mmaulwurff@gmail.com>
 SPDX-License-Identifier: CC0-1.0
 -->
 
@@ -47,5 +47,5 @@ of cluttering Options Menu.
 
 ## Acknowledgments
 
-- Bug reports: mamaluigisbagel, cosmos10040.
+- Bug reports: mamaluigisbagel, cosmos10040, Agent_Ash.
 - Brazilian Portuguese translation: generic name guy.
