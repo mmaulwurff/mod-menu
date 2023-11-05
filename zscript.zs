@@ -32,9 +32,12 @@ class mm_Menu : OptionMenu
 /// Builds Mod Menu: collects modded menus and cleans up base option menus.
 class mm_Builder : OptionMenuItem
 {
+
   const FULL_OPTIONS_MENU   = "OptionsMenu";
   const SIMPLE_OPTIONS_MENU = "OptionsMenuSimple";
   const MOD_MENU            = "mm_Options";
+  const INJECTOR            = "OptionMenuItemmm_Injector";
+  const STATIC_TEXT         = "OptionMenuItemStaticText";
 
   static void build()
   {
@@ -82,13 +85,13 @@ class mm_Builder : OptionMenuItem
     bool isPreviousLineBlank = false;
     foreach (item : optionsDescriptor.mItems)
     {
-      if (item is "OptionMenuItemmm_Injector") continue;
+      if (item is INJECTOR) continue;
 
       // This is sometimes added to the menu by GZDoom code.
       if (item.mLabel == "---------------") continue;
 
       // Consecutive blank lines.
-      if (item is "OptionMenuItemStaticText" && item.mLabel.length() <= 1)
+      if (item is STATIC_TEXT && item.mLabel.length() <= 1)
       {
         if (isPreviousLineBlank) continue;
         else isPreviousLineBlank = true;
@@ -122,8 +125,8 @@ class mm_Builder : OptionMenuItem
     foreach (item : descriptor.mItems)
     {
       if (!itemInfo.isModded(item)) continue;
-      if (item is "OptionMenuItemmm_Injector") continue;
-      if (item is "OptionMenuItemStaticText") continue;
+      if (item is INJECTOR) continue;
+      if (item is STATIC_TEXT) continue;
 
       // If it's a submenu, replace it with shortened version.
       let menu = OptionMenuItemSubmenu(item);
@@ -137,11 +140,8 @@ class mm_Builder : OptionMenuItem
     // Searches for controls that have an action that contains "open" and "menu"
     // and puts creates a corresponding item in target.
 
-    let keysMenuDescriptor = getDescriptor("CustomizeControls");
-    int itemsCount = keysMenuDescriptor.mItems.size();
-    for (int i = 0; i < itemsCount; ++i)
+    foreach (item : getDescriptor("CustomizeControls").mItems)
     {
-      let item = keysMenuDescriptor.mItems[i];
       if (!(item is "OptionMenuItemControlBase")) continue;
 
       string itemAction = item.mAction;
@@ -160,10 +160,9 @@ class mm_Builder : OptionMenuItem
     let mainDescriptor = ListMenuDescriptor(MenuDescriptor.getDescriptor("MainMenu"));
     if (mainDescriptor == NULL) return;
 
-    int count = mainDescriptor.mItems.size();
-    for (int i = 0; i < count; ++i)
+    foreach (item : mainDescriptor.mItems)
     {
-      string anAction = mainDescriptor.mItems[i].mAction;
+      string anAction = item.mAction;
       if (anAction ~== "PlayerClassMenu" || anAction ~== "OptionsMenu") continue;
 
       let descriptor = getDescriptor(anAction);
@@ -232,25 +231,19 @@ class mm_ShortenedSubmenu : OptionMenuItemSubmenu
   override int Draw(OptionMenuDescriptor desc, int y, int indent, bool selected)
   {
     // Note the spaces!
-    static const string toRemoves[] =
-    {
-      " options"   , " Options"   , " OPTIONS",
-      " settings"  , " Settings"  , " SETTINGS",
-      "customize " , "Customize " , "CUSTOMIZE "
-    };
+    static const string toRemoves[] = {" options", " settings", "customize "};
 
     mLabel = mOriginalLabel;
 
     string translatedLabel = StringTable.localize(mOriginalLabel);
+    string translatedLabelLower = translatedLabel.MakeLower();
 
-    int removesCount = toRemoves.size();
-    for (int i = 0; i < removesCount; ++i)
+    foreach (toRemove : toRemoves)
     {
-      string toRemove = toRemoves[i];
-      if (translatedLabel.indexOf(toRemove) != -1 && translatedLabel != toRemove)
+      int index = translatedLabelLower.indexOf(toRemove);
+      if (index != -1 && translatedLabelLower != toRemove)
       {
-        translatedLabel.replace(toRemove, "");
-        mLabel = translatedLabel;
+        mLabel = translatedLabel.left(index) .. translatedLabel.mid(index + toRemove.length());
         break;
       }
     }
